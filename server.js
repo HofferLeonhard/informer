@@ -1,16 +1,12 @@
-/*
-In the node.js intro tutorial (http://nodejs.org/), they show a basic tcp 
-server, but for some reason omit a client connecting to it.  I added an 
-example at the bottom.
-Save the following server in example.js:
-*/
-
-var net = require('net');
-
-var server = net.createServer(function(socket) {
-	socket.write('Echo server\r\n');
-	socket.pipe(socket);
+var io = require('socket.io').listen(3000);
+io.on('connection', function (socket) {
+    console.log('connected:', socket.client.id);
+    socket.on('serverEvent', function (data) {
+        console.log('new message from client:', data);
+    });
+    setInterval(function () {
+        socket.emit('clientEvent', Math.random());
+        console.log('message sent to the clients');
+    }, 3000);
 });
-
-server.listen(1337, '127.0.0.1');
-console.log("Server connected");
+console.log("server listening on : 3000");
