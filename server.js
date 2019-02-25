@@ -1,12 +1,38 @@
+var http = require('http');
+var fs = require('fs');
+const PORT = process.env.PORT;
 
-const express = require('express')
-const app = express()
-const PORT = process.env.PORT
+// Chargement du fichier index.html affiché au client
+var server = http.createServer(function(req, res) {
+    fs.readFile('./index.html', 'utf-8', function(error, content) {
+        res.writeHead(200, {"Content-Type": "text/html"});
+        res.end(content);
+    });
+});
 
-app.get('/', function (req, res) {
-  res.send('Hello World!')
-})
+// Chargement de socket.io
+var io = require('socket.io').listen(server);
 
-app.listen(PORT, function () {
-  console.log('Example app listening on port: ', PORT);
-})
+io.sockets.on('connection', function (socket, pseudo) {
+	console.log("un nouveau client connecté");
+	
+    // Quand un client se connecte, on lui envoie un message
+    socket.emit('message', 'Vous êtes bien connecté !');
+    // On signale aux autres clients qu'il y a un nouveau venu
+    socket.broadcast.emit('message', 'Un autre client vient de se connecter ! ');
+
+    // Dès qu'on nous donne un pseudo, on le stocke en variable de session
+    socket.on('petit_nouveau', function(pseudo) {
+        socket.pseudo = pseudo;
+    });
+
+    // Dès qu'on reçoit un "message" (clic sur le bouton), on le note dans la console
+    socket.on('message', function (message) {
+        // On récupère le pseudo de celui qui a cliqué dans les variables de session
+        console.log(socket.pseudo + ' me parle ! Il me dit : ' + message);
+    }); 
+});
+
+
+server.listen(PORT);
+console.log("Server listening on port : "+PORT);
