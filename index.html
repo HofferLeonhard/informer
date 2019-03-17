@@ -42,6 +42,8 @@
 			    <h4 class="card-title">{{user.ip}}</h4>
 			    <p class="card-text">{{user.family}}</p>
 			    <a href="#" class="btn btn-primary">Port: {{user.port}}</a>
+			    <br/><br/>
+			    <p class="card-text" style="color: green; text-transform: capitalize;">* {{user.state}}</p>
 			  </div>
 			</div>
 		  </div>
@@ -66,6 +68,12 @@
 	            	else if(message.type == "user connected"){
 			        	document.getElementById("status-connected").style.display = "block";
 			        	document.getElementById("status-disconnected").style.display = "none";
+	            	}
+	            	else if(message.type == "removed-successfully"){
+			        	alert("New client removed successfully : "+message.userIp);
+			        	$scope.$apply(function(){
+	            			$scope.UsersList = message.clients;
+	            		});
 	            	}
 			    });
 

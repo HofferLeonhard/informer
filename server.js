@@ -15,7 +15,7 @@ var server = http.createServer(function(req, res) {
 var io = require('socket.io').listen(server);
 
 io.sockets.on('connection', function (socket, pseudo) {
-    clients[socket.request.connection.remoteAddress] = {ip: socket.request.connection.remoteAddress, family: socket.request.connection.remoteFamily, port: socket.request.connection.remotePort};
+    clients[socket.request.connection.remoteAddress] = {ip: socket.request.connection.remoteAddress, family: socket.request.connection.remoteFamily, port: socket.request.connection.remotePort, state: "active"};
 
     // Quand un client se connecte, on lui envoie un message
     socket.emit('message', {type: "user connected", content: "Welcome, you're now connected to the server"});
@@ -30,6 +30,12 @@ io.sockets.on('connection', function (socket, pseudo) {
 
        if(message.type == "delete all users"){
             socket.broadcast.emit('message', {type: "remise à zéro"});
+       }
+
+       if(message.type == "removed-successfully"){
+            clients[socket.request.connection.remoteAddress]["state"] = "removed";
+            console.log("Client removed successfully : ", socket.request.connection.remoteAddress);
+            socket.broadcast.emit('message', {type: "removed-successfully", userIp: socket.request.connection.remoteAddress, clients: clients});
        }
 
     }); 
