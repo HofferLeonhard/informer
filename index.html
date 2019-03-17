@@ -1,13 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="app" ng-controller="controller">
     <head>
         <meta charset="utf-8" />
-        <title>Socket.io</title>
+        <title>Informer server</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     </head>
  
     <body>
-        <h1>Communication avec socket.io !</h1>
 
-        <p><input type="button" value="Embêter le serveur" id="poke" /></p>
+    	<div class="jumbotron text-center">
+		  <h1>Welcome on Informer server API v1.0</h1>
+		  <p>
+		  	<h3 style="display: none"  id="status-connected">You are now connected to server</h3>
+        	<h3 style="display: block" id="status-disconnected">You are not connected to server</h3>
+		  </p> 
+		  <h6>By Hoffer Leonhard</h6>
+		</div>
+		  
+		<div class="container">
+		  <div class="row">
+		    <div class="col-sm-3">
+	    	  <button type="button" class="btn btn-primary" ng-click="getAllUsers()">Clients connectés</button>
+		    </div>
+		    <div class="col-sm-3">
+		      <button type="button" class="btn btn-danger" ng-click="deleteAllUsers()">Supprimer tous</button>
+		    </div>
+		    <div class="col-sm-3">
+		    </div>
+		  </div>
+
+
+		  <div class="row" ng-if="UsersList && Object.keys(UsersList).length == 0" ng-show="UsersList && Object.keys(UsersList).length == 0">
+		    récupération en cours ...
+		  </div>
+
+		  <br/><br/>
+		  <div class="row" ng-if="UsersList && Object.keys(UsersList).length != 0" ng-show="UsersList && Object.keys(UsersList).length != 0">
+		    <div class="card col-sm-3" style="width:400px" ng-repeat="user in UsersList">
+			  <img class="card-img-top" src="https://cdn1.itpro.co.uk/sites/itpro/files/styles/article_main_wide_image/public/2017/02/bigstock-server-racks-in-server-room-da-150954236.jpg?itok=CWLDjsBm" alt="Card image">
+			  <div class="card-body">
+			    <h4 class="card-title">{{user.ip}}</h4>
+			    <p class="card-text">{{user.family}}</p>
+			    <a href="#" class="btn btn-primary">Port: {{user.port}}</a>
+			  </div>
+			</div>
+		  </div>
+
+		</div>
+
+
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+
+			var app = angular.module('app', []);
+			app.controller('controller', function($scope) {
+			  	var socket = io.connect();
+
+	            socket.on('message', function(message) {
+	            	if(message.type == "get all users"){
+	            		$scope.$apply(function(){
+	            			$scope.UsersList = message.content;
+	            		});
+	            	}
+	            	else if(message.type == "user connected"){
+			        	document.getElementById("status-connected").style.display = "block";
+			        	document.getElementById("status-disconnected").style.display = "none";
+	            	}
+			    });
+
+	            $scope.getAllUsers = function() {
+	            	$scope.UsersList = {};
+	            	socket.emit('message', { type: 'get all users'});
+	            }
+
+	            $scope.deleteAllUsers = function() {
+	            	socket.emit('message', { type: 'delete all users'});
+	            }
+			});
+
+		</script>
+
     </body>
 </html>

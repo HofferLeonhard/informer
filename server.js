@@ -1,6 +1,7 @@
 var http = require('http');
 var fs = require('fs');
-const PORT = process.env.PORT;
+const PORT = process.env.PORT||5000;
+var clients = {};
 
 // Chargement du fichier index.html affiché au client
 var server = http.createServer(function(req, res) {
@@ -14,22 +15,23 @@ var server = http.createServer(function(req, res) {
 var io = require('socket.io').listen(server);
 
 io.sockets.on('connection', function (socket, pseudo) {
-	console.log("un nouveau client connecté");
-	
-    // Quand un client se connecte, on lui envoie un message
-    socket.emit('message', 'Vous êtes bien connecté !');
-    // On signale aux autres clients qu'il y a un nouveau venu
-    socket.broadcast.emit('message', 'Un autre client vient de se connecter ! ');
+    clients[socket.request.connection.remoteAddress] = {ip: socket.request.connection.remoteAddress, family: socket.request.connection.remoteFamily, port: socket.request.connection.remotePort};
 
-    // Dès qu'on nous donne un pseudo, on le stocke en variable de session
-    socket.on('petit_nouveau', function(pseudo) {
-        socket.pseudo = pseudo;
-    });
+    // Quand un client se connecte, on lui envoie un message
+    socket.emit('message', {type: "user connected", content: "Welcome, you're now connected to the server"});
+
 
     // Dès qu'on reçoit un "message" (clic sur le bouton), on le note dans la console
     socket.on('message', function (message) {
-        // On récupère le pseudo de celui qui a cliqué dans les variables de session
-        console.log(socket.pseudo + ' me parle ! Il me dit : ' + message);
+       
+       if(message.type == "get all users"){
+            socket.emit('message', {type: "get all users", content: clients});
+       }
+
+       if(message.type == "delete all users"){
+            socket.broadcast.emit('message', {type: "remise à zéro"});
+       }
+
     }); 
 });
 
